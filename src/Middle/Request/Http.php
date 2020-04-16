@@ -44,6 +44,7 @@ class Http extends BaseRequest implements RequestInterface
 
         strpos($url, 'http') === false && $url = Config::$baseURL . $url;
 
+        $method = strtoupper($method);
         $options = self::buildOptions($method, $requestData);
 
         $timeout = isset($other['timeout']) ? $extra['timeout'] : 5;
@@ -57,12 +58,13 @@ class Http extends BaseRequest implements RequestInterface
             Log::info('curlGuzzle, url='.$url.', options='.json_encode($options).', statusCode=' . $statusCode .', content='. $content);
 
             return json_decode($content, true);
-        } catch (RequestException $e) {
-            $content = $e->getResponse()->getBody()->getContents();
-            Log::critical('curlGuzzle, url='.$url.', options='.json_encode($options).', error: '.$content);
+        }  catch (\Exception $e) {
+            $jsonBody = $e->getResponse();
+            if (!empty($jsonBody)) {
+                $content = $jsonBody->getBody()->getContents();
+                return json_decode($content, true);
+            }
 
-            return json_decode($content, true);
-        } catch (\Exception $e) {
             Log::error('curlGuzzle, url='.$url.', options='.json_encode($options).', error: '.$e->getMessage());
         }
 
