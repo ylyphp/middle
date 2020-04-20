@@ -62,10 +62,11 @@ class Http extends BaseRequest implements RequestInterface
             $jsonBody = $e->getResponse();
             if (!empty($jsonBody)) {
                 $content = $jsonBody->getBody()->getContents();
-                return json_decode($content, true);
+            } else {
+                $content = $e->getMessage();
             }
 
-            Log::error('curlGuzzle, url='.$url.', options='.json_encode($options).', error: '.$e->getMessage());
+            Log::error('curlGuzzle, url='.$url.', options='.json_encode($options).', error: '.$content);
         }
 
         return false;

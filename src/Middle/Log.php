@@ -52,7 +52,7 @@ class Log
             throw new \Exception("Log method '".$name."' not exists");
         }
 
-        if (false == (self::$logInstance instanceof Logger)) {
+        if (empty(self::$logInstance) || false === (self::$logInstance instanceof Logger)) {
             // the default date format is "Y-m-d\TH:i:sP"
             $dateFormat = "Y-m-d\TH:i:sP";
             // the default output format is "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n"
