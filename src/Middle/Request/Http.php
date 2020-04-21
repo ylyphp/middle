@@ -59,8 +59,12 @@ class Http extends BaseRequest implements RequestInterface
             Log::info($logMessage.', statusCode=' . $statusCode .', content='. $content);
 
             return json_decode($content, true);
-        } catch (\Exception $e) {           
-            $content = !empty($e->getResponse()) ? $jsonBody->getBody()->getContents() : $e->getMessage();
+        } catch (\Exception $e) {  
+            if ($jsonBody = $e->getResponse()) {
+                $content = $jsonBody->getBody()->getContents();
+            } else {
+                $content = $e->getMessage();
+            }         
 
             Log::error($logMessage.', error='.$content);
         }
