@@ -4,7 +4,6 @@ namespace Ylyphp\Middle\Request;
 
 use Ylyphp\Middle\Config;
 use Ylyphp\Middle\Log;
-use GuzzleHttp\Exception\RequestException;
 
 class Http extends BaseRequest implements RequestInterface
 {
@@ -50,23 +49,20 @@ class Http extends BaseRequest implements RequestInterface
         $timeout = isset($other['timeout']) ? $extra['timeout'] : 5;
         $client = new \GuzzleHttp\Client(['verify' => false, \GuzzleHttp\RequestOptions::CONNECT_TIMEOUT => $timeout]);
 
+        $logMessage =  'curlGuzzle, method='.$method.', url='.$url.', options='.json_encode($options, JSON_UNESCAPED_UNICODE);
+        
         try {
             $response = $client->request($method, $url, $options);
             $statusCode = $response->getStatusCode();
             $content = $response->getBody()->getContents();
 
-            Log::info('curlGuzzle, url='.$url.', options='.json_encode($options).', statusCode=' . $statusCode .', content='. $content);
+            Log::info($logMessage.', statusCode=' . $statusCode .', content='. $content);
 
             return json_decode($content, true);
-        }  catch (\Exception $e) {
-            $jsonBody = $e->getResponse();
-            if (!empty($jsonBody)) {
-                $content = $jsonBody->getBody()->getContents();
-            } else {
-                $content = $e->getMessage();
-            }
+        } catch (\Exception $e) {           
+            $content = !empty($e->getResponse()) ? $jsonBody->getBody()->getContents() : $e->getMessage();
 
-            Log::error('curlGuzzle, url='.$url.', options='.json_encode($options).', error: '.$content);
+            Log::error($logMessage.', error='.$content);
         }
 
         return false;
@@ -90,8 +86,8 @@ class Http extends BaseRequest implements RequestInterface
 
         ($method === 'GET') && $options[\GuzzleHttp\RequestOptions::QUERY] = $requestData;
 
-        ($method === 'POST') && $headers['Content-Type'] = 'application/json'
-            && $options[\GuzzleHttp\RequestOptions::BODY] = json_encode($requestData, JSON_UNESCAPED_UNICODE);
+        ($method === 'POST') && ($headers['Content-Type'] = 'application/json')
+            && ($options[\GuzzleHttp\RequestOptions::BODY] = json_encode($requestData, JSON_UNESCAPED_UNICODE));
 
         $options['headers'] = $headers;
 
